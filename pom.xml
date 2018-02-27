@@ -46,6 +46,35 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- keycloak-wsfed -->
+        <dependency>
+            <groupId>com.quest</groupId>
+            <artifactId>keycloak-wsfed</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- Picketlink -->
+        <dependency>
+            <groupId>org.picketlink</groupId>
+            <artifactId>picketlink-federation</artifactId>
+            <version>${picketlink.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.picketlink</groupId>
+            <artifactId>picketlink-common</artifactId>
+            <version>${picketlink.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Apache -->
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.6</version>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- Testing-->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
