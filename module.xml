@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 
-<module xmlns="urn:jboss:module:1.3" name="com.quest.keycloak-authorization">
+<module xmlns="urn:jboss:module:1.3" name="io.cloudtrust.keycloak-authorization">
 
     <resources>
         <resource-root path="keycloak-authorization-3.4.3.Final.jar"/>
