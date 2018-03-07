@@ -1,6 +1,6 @@
 package org.keycloak.protocol.docker;
 
-import io.cloudtrust.protocol.LocalAuthorizationService;
+import io.cloudtrust.keycloak.protocol.LocalAuthorizationService;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.specimpl.ResponseBuilderImpl;
 import org.keycloak.events.EventBuilder;

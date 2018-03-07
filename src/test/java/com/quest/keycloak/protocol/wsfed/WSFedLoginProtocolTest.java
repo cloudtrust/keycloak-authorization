@@ -1,6 +1,6 @@
 package com.quest.keycloak.protocol.wsfed;
 
-import io.cloudtrust.test.MockHelper;
+import io.cloudtrust.keycloak.test.MockHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

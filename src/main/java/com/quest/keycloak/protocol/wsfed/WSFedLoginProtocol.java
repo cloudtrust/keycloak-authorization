@@ -22,7 +22,7 @@ import com.quest.keycloak.protocol.wsfed.builders.RequestSecurityTokenResponseBu
 import com.quest.keycloak.protocol.wsfed.builders.WSFedOIDCAccessTokenBuilder;
 import com.quest.keycloak.protocol.wsfed.builders.WSFedSAML2AssertionTypeBuilder;
 import com.quest.keycloak.protocol.wsfed.builders.WsFedSAML11AssertionTypeBuilder;
-import io.cloudtrust.protocol.LocalAuthorizationService;
+import io.cloudtrust.keycloak.protocol.LocalAuthorizationService;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;

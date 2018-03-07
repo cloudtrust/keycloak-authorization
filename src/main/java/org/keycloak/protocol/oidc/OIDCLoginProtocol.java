@@ -16,7 +16,7 @@
  */
 package org.keycloak.protocol.oidc;
 
-import io.cloudtrust.protocol.LocalAuthorizationService;
+import io.cloudtrust.keycloak.protocol.LocalAuthorizationService;
 import org.jboss.logging.Logger;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.OAuthErrorException;

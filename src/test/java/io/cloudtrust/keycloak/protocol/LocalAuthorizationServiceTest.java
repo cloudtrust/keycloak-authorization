@@ -1,7 +1,7 @@
-package io.cloudtrust.protocol;
+package io.cloudtrust.keycloak.protocol;
 
 import com.example.mockito.MockitoExtension;
-import io.cloudtrust.test.MockHelper;
+import io.cloudtrust.keycloak.test.MockHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

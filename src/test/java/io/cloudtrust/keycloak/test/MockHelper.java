@@ -1,4 +1,4 @@
-package io.cloudtrust.test;
+package io.cloudtrust.keycloak.test;
 
 import org.keycloak.authorization.AuthorizationProvider;
 import org.keycloak.authorization.model.Policy;

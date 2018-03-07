@@ -17,7 +17,7 @@
 
 package org.keycloak.protocol.saml;
 
-import io.cloudtrust.protocol.LocalAuthorizationService;
+import io.cloudtrust.keycloak.protocol.LocalAuthorizationService;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;

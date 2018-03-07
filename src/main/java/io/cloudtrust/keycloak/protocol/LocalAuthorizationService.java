@@ -1,4 +1,4 @@
-package io.cloudtrust.protocol;
+package io.cloudtrust.keycloak.protocol;
 
 import org.jboss.logging.Logger;
 

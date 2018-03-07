@@ -1,6 +1,6 @@
 package org.keycloak.protocol.oidc;
 
-import io.cloudtrust.test.MockHelper;
+import io.cloudtrust.keycloak.test.MockHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.keycloak.common.ClientConnection;
