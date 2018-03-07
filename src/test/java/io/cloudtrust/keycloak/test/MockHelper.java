@@ -271,6 +271,9 @@ public class MockHelper {
         return userPolicy;
     }
 
+    /**
+     * Initialises the keycloak session. This basically represent's keycloak's current state, including providers
+     */
     private void initSession(){
         when(session.getProvider(StoreFactory.class)).thenReturn(storeFactory);
         KeycloakContext context = Mockito.mock(KeycloakContext.class);
@@ -293,6 +296,9 @@ public class MockHelper {
         return session;
     }
 
+    /**
+     * Initialises the user session, representing the current session of the user, which may span multiple clients
+     */
     private void initUserSession() {
         when(userSession.getId()).thenReturn(UUID.randomUUID().toString());
         when(userSession.getBrokerSessionId()).thenReturn(UUID.randomUUID().toString());
@@ -307,6 +313,10 @@ public class MockHelper {
         return userSession;
     }
 
+    /**
+     * Initialises the client session, representing the current state of the client, which may span multiple users.
+     * Here we use the AuthenticatedClientSessionModel
+     */
     private void initClientSession() {
         when(clientSession.getId()).thenReturn(UUID.randomUUID().toString());
         when(clientSession.getClient()).thenReturn(client);
@@ -323,6 +333,9 @@ public class MockHelper {
     }
 
 
+    /**
+     * Initialises the UriInfo for the current action
+     */
     private void initUriInfo() {
         //We have to use thenAnswer so that the UriBuilder gets created on each call vs at mock time.
         when(uriInfo.getBaseUriBuilder()).
