@@ -65,6 +65,9 @@ __standalone.xml__
 ...
 ```
 
+In keycloak, the admin theme must then be set to `authorization` in the master realm and in the realm where the local 
+authorization is used, and keycloak must be restarted.  
+
 ## How to use
 
 ## How this module works
