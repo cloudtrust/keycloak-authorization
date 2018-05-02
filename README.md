@@ -51,6 +51,58 @@ __standalone.xml__
 ...
 ```
 
+Currently working on 3.4.3.Final (check tags for compatibility with previous keycloak versions)
+
+This is an example with keycloak avaible at /opt/keycloak
+
+### Copy files
+
+```Bash
+#Create layer in keycloak setup
+install -d -v -m755 /opt/keycloak/modules/system/layers/wsfed -o keycloak -g keycloak
+
+#Setup the module directory
+install -d -v -m755 /opt/keycloak/modules/system/layers/authorization/io/cloutrust/keycloak-authorization/main/ -o keycloak -g keycloak
+
+#Install jar
+install -v -m0755 -o keycloak -g keycloak -D target/keycloak-authorization-3.4.3.Final.jar /opt/keycloak/modules/system/layers/authorization/io/cloutrust/keycloak-authorization/main/
+
+#Install module file
+install -v -m0755 -o keycloak -g keycloak -D module.xml /opt/keycloak/modules/system/layers/authorization/io/cloutrust/keycloak-authorization/main/
+
+```
+
+### Enable module and load theme
+
+__layers.conf__
+
+```Bash
+layers=keycloak,wsfed,authorization
+```
+
+__standalone.xml__
+
+```xml
+<web-context>auth</web-context>
+<providers>
+    <provider>module:io.cloudtrust.keycloak-authorization</provider>
+    ...
+</providers>
+...
+<theme>
+    <modules>
+            <module>
+                    io.cloudtrust.keycloak-authorization
+            </module>
+    </modules>
+    ...
+</theme>
+...
+```
+
+In keycloak, the admin theme must then be set to `authorization` in the master realm and in the realm where the local 
+authorization is used, and keycloak must be restarted.  
+
 ## How to use
 1) Open keycloak's administration console
 1) Go the client's settings page you want to configure
@@ -98,7 +150,8 @@ This module is designed to work with our WS-FED protocol module. However, to rem
 1) Remove the package `com.quest.keycloak.protocol.wsfed` in the main and test directories
 1) Remove the dependency to `keycloak-wsfed` in the `pom.xml`
 1) Remove the line `<module name="com.quest.keycloak-wsfed"/>` in the module.xml
-1) Build the module and deploy it as you would otherwise.
+1) Build the module and deploy it as you would otherwise, the only difference is that there will not be the `wsfed`
+entry in the `layers.conf` file.
 
 ## The class loader
 
@@ -126,6 +179,3 @@ We import a realm with:
 Foreach protocol: OIDC, SAML, WSFED
 - we check that user1 can retrieve an access token
 - we check that user2 can't
-
-
-

@@ -101,35 +101,30 @@ public class WSFedLoginProtocolFactory extends AbstractLoginProtocolFactory {
                 true, UPN_CONSENT_TEXT,
                 true, true);
         builtins.add(model);
-        defaultBuiltins.add(model);
         model = OIDCUserPropertyMapper.createClaimMapper(USERNAME,
                 "username",
                 "preferred_username", "String",
                 true, USERNAME_CONSENT_TEXT,
                 true, true);
         builtins.add(model);
-        defaultBuiltins.add(model);
         model = OIDCUserPropertyMapper.createClaimMapper(EMAIL,
                 "email",
                 "email", "String",
                 true, EMAIL_CONSENT_TEXT,
                 true, true);
         builtins.add(model);
-        defaultBuiltins.add(model);
         model = OIDCUserPropertyMapper.createClaimMapper(GIVEN_NAME,
                 "firstName",
                 "given_name", "String",
                 true, GIVEN_NAME_CONSENT_TEXT,
                 true, true);
         builtins.add(model);
-        defaultBuiltins.add(model);
         model = OIDCUserPropertyMapper.createClaimMapper(FAMILY_NAME,
                 "lastName",
                 "family_name", "String",
                 true, FAMILY_NAME_CONSENT_TEXT,
                 true, true);
         builtins.add(model);
-        defaultBuiltins.add(model);
         model = OIDCUserPropertyMapper.createClaimMapper(EMAIL_VERIFIED,
                 "emailVerified",
                 "email_verified", "boolean",
@@ -139,7 +134,6 @@ public class WSFedLoginProtocolFactory extends AbstractLoginProtocolFactory {
 
         model = OIDCFullNameMapper.create(FULL_NAME, true, FULL_NAME_CONSENT_TEXT, true, true);
         builtins.add(model);
-        defaultBuiltins.add(model);
 
         ProtocolMapperModel address = AddressMapper.createAddressMapper();
         builtins.add(address);
@@ -168,7 +162,6 @@ public class WSFedLoginProtocolFactory extends AbstractLoginProtocolFactory {
         builtins.add(model);
         model = SAMLRoleListMapper.create("saml role list", "Role", AttributeStatementHelper.BASIC, null, false);
         builtins.add(model);
-        defaultBuiltins.add(model);
 
     }
 
