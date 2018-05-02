@@ -174,6 +174,7 @@ public class WSFedLoginProtocolFactory extends AbstractLoginProtocolFactory {
 
     @Override
     protected void addDefaults(ClientModel client) {
-        for (ProtocolMapperModel model : defaultBuiltins) client.addProtocolMapper(model);
+//        for (ProtocolMapperModel model : defaultBuiltins) client.addProtocolMapper(model);
+        //!!! IMPORTANT: here we don't add the defaultBuiltins as this is handled by the default OIDCLoginProtocolFactory which is also instanciated but not used as the factory
     }
 }

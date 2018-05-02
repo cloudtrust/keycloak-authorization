@@ -5,6 +5,7 @@ import org.jboss.logging.Logger;
 import org.keycloak.authorization.AuthorizationProvider;
 import org.keycloak.authorization.common.KeycloakEvaluationContext;
 import org.keycloak.authorization.common.KeycloakIdentity;
+import org.keycloak.authorization.model.Resource;
 import org.keycloak.authorization.model.ResourceServer;
 import org.keycloak.authorization.permission.ResourcePermission;
 import org.keycloak.authorization.policy.evaluation.Result;
@@ -18,6 +19,8 @@ import org.keycloak.services.ErrorPage;
 import org.keycloak.services.managers.ClientSessionCode;
 
 import javax.ws.rs.core.Response;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -60,35 +63,55 @@ public final class LocalAuthorizationService {
      * @param userSession The session of the user which is asking for access to the client's resources
      * @param clientSession The client session currently being used
      * @param accessCode The client session code TODO figure out what this actually is
-     * @return A 403 FORBIDDEN error page if the user is not authorised to access the client, and null otherwise
+     * @return {@code true} if the user is not authorised to access the client, false otherwise
      */
-    public Response isAuthorized(ClientModel client, UserSessionModel userSession, AuthenticatedClientSessionModel clientSession, ClientSessionCode<AuthenticatedClientSessionModel> accessCode) {
+    public boolean isAuthorized(ClientModel client, UserSessionModel userSession, AuthenticatedClientSessionModel clientSession, ClientSessionCode<AuthenticatedClientSessionModel> accessCode) {
         AuthorizationProvider authorization = session.getProvider(AuthorizationProvider.class);
         StoreFactory storeFactory = authorization.getStoreFactory();
         UserModel user = userSession.getUser();
         ResourceServer resourceServer = storeFactory.getResourceServerStore().findById(client.getId());
         if (resourceServer == null) {
-            return null; //permissions not enabled
+            return true; //permissions not enabled
         }
         TokenManager tokenManager = new TokenManager();
         AccessToken accessToken = tokenManager.createClientAccessToken(session, accessCode.getRequestedRoles(), realm, client, user, userSession, clientSession);
 
         KeycloakIdentity identity = new KeycloakIdentity(accessToken, session, realm);
 
-        List<ResourcePermission> permissions = Permissions.all(resourceServer, identity, authorization);
+        Resource resource=storeFactory.getResourceStore().findByName("Keycloak Client Resource", resourceServer.getId());
+        List<ResourcePermission> permissions = Arrays.asList(new ResourcePermission(resource, new ArrayList<>(), resourceServer));
 
+        List<Result> result = authorization.evaluators().from(permissions, new KeycloakEvaluationContext(identity, authorization.getKeycloakSession())).evaluate();
+        List<Permission> entitlements = Permissions.permits(result, null, authorization, resourceServer);
+
+        if (!entitlements.isEmpty()) {
+            return true; //authorization ok
+        }
+        return false;
+    }
+
+    /**
+     * This method evaluates whether or not a user is authorised to access a client based on the authorisation values
+     * set in the client. If the user is not authorised, the method returns a 403 FORBIDDEN error page. If the user
+     * is authorised, the method returns null. Having no authorisation set for a client is equivalent to being authorised.
+     *
+     * @param client The client to which access is currently being requested
+     * @param userSession The session of the user which is asking for access to the client's resources
+     * @param clientSession The client session currently being used
+     * @param accessCode The client session code TODO figure out what this actually is
+     * @return A 403 FORBIDDEN error page if the user is not authorised to access the client, and null otherwise
+     */
+    public Response isAuthorizedResponse(ClientModel client, UserSessionModel userSession, AuthenticatedClientSessionModel clientSession, ClientSessionCode<AuthenticatedClientSessionModel> accessCode) {
         try {
-            List<Result> result = authorization.evaluators().from(permissions, new KeycloakEvaluationContext(identity, authorization.getKeycloakSession())).evaluate();
-            List<Permission> entitlements = Permissions.permits(result, null, authorization, resourceServer);
-
-            if (!entitlements.isEmpty()) {
-                return null; //authorization ok
+            boolean authorized=isAuthorized(client, userSession, clientSession, accessCode);
+            if(authorized){
+                return null;
+            }else{
+                return ErrorPage.error(session, null, Response.Status.FORBIDDEN, "not_authorized");
             }
         } catch (Exception cause) {
             logger.error("Failed to evaluate permissions", cause);
             return ErrorPage.error(session, null, Response.Status.INTERNAL_SERVER_ERROR, "Error while evaluating permissions.");
         }
-
-        return ErrorPage.error(session, null, Response.Status.FORBIDDEN, "not_authorized");
     }
 }

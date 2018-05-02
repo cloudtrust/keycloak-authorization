@@ -15,8 +15,53 @@ not need re-input his login details to when switching between clients he has acc
 have access to.
 
 ## How to install
+This is an example with keycloak available at /opt/keycloak
+
+```Bash
+#Create layer in keycloak setup
+install -d -v -m755 /opt/keycloak/modules/system/layers/authorization -o keycloak -g keycloak
+
+#Setup the module directory
+install -d -v -m755 /opt/keycloak/modules/system/layers/authorization/io/cloudtrust/keycloak-authorization/main/ -o keycloak -g keycloak
+
+#Install jar
+install -v -m0755 -o keycloak -g keycloak -D target/keycloak-authorization-3.4.3.Final.jar /opt/keycloak/modules/system/layers/authorization/io/cloudtrust/keycloak-authorization/main/
+
+#Install module file
+install -v -m0755 -o keycloak -g keycloak -D module.xml /opt/keycloak/modules/system/layers/authorization/io/cloudtrust/keycloak-authorization/main/
+
+```
+
+### Enable module
+
+__layers.conf__
+
+```Bash
+layers=keycloak,wsfed,authorization
+```
+
+__standalone.xml__
+
+```xml
+<web-context>auth</web-context>
+<providers>
+    <provider>module:io.cloudtrust.keycloak-authorization</provider>
+    ...
+</providers>
+...
+```
 
 ## How to use
+1) Open keycloak's administration console
+1) Go the client's settings page you want to configure
+1) Enable Authorization (and save)
+1) In the Authorization tab (visible only when authorization is enabled):
+    1) In the `Resources` sub-tab, create a resource with name `Keycloak Client Resource` and all the other fields empty
+    1) In the `Policies` sub-tab, create a policy of you liking (ex. Role Policy requiring a certain realm-role)
+    1) In the `Permissions` sub-tab, create a `resource-based` permission using the `Keycloak Client Resource` created before, and the Policy
+
+Your client is now protected with the specified policy.
+
 
 ## How this module works
 
@@ -34,7 +79,6 @@ Keycloak uses a map to store this information, we overwrite the dependency
     is called. This will ensure that the local LoginProtocol is called.
     * **The login protocol** This is only class we actually modify. In the authenticated method we invoke the code to 
     verify that the client is authorised to access the client it wishes to connect to.
-1) We use a theme to add to the administrator pages the option to enable authorisation for all clients.
 
 We call keycloak's own existing authorisation methods and framework for a user's authorisation. This is done in the  
 methods of the class io.cloudtrust.keycloak.protocol.LocalAuthorizationService. 
@@ -55,3 +99,33 @@ This module is designed to work with our WS-FED protocol module. However, to rem
 1) Remove the dependency to `keycloak-wsfed` in the `pom.xml`
 1) Remove the line `<module name="com.quest.keycloak-wsfed"/>` in the module.xml
 1) Build the module and deploy it as you would otherwise.
+
+## The class loader
+
+This part explains how we override existing classes in keycloak (to add the client check inside the existing flows)
+- Keycloak uses JBoss/Wildfly Module class loader (a class loader per module)
+- To load each classe (ex: `org.keycloak.protocol.oidc.endpoints.TokenEndpoint`) The method `Module.loadClassModule` is called.
+- It retrieves all the loaders where the path(ex: `org/keycloak/protocol/oidc/endpoints`) of the class can be found.
+- The paths and their respective loaders are stored in a map: `Map<String, List<LocalLoader>>`.
+- This map is populated when loading the module (`ModuleLoader.loadModule`), when calling `module.relinkIfNecessary()`
+- a `Linkage` is then created with all the paths by iterating over all the dependencies defined in the unliked `Linkage`
+- These dependencies are instanciated when first defining the module in `ModuleLoader.defineModule` by calling `module.setDependencies` with the `moduleSpec.dependencies`
+- Finally, moduleSpec.dependencies is instanciated using the ModuleXmlParser which add a local dependency on the module before adding it's dependencies
+
+On the other hand when hot deploying modules (ex: arquillian) in the `ModuleSpecProcessor.createModuleService`, `this.createDependencies(specBuilder, dependencies, false);` is called before `specBuilder.addDependency(DependencySpec.createLocalDependencySpec());`
+
+## Tests
+For now (Until teh class Loader is fixed), to test the module we need to deploy it manually on a local keycloak, and run the tests without using arquillian.
+The integration tests do the following:
+We import a realm with:
+- user1 having the role test-role and user2 without it.
+- a resource without URI called "Keycloak Client Resource" (this is important)
+- a Role policy
+- a permission linking the resource with policy
+
+Foreach protocol: OIDC, SAML, WSFED
+- we check that user1 can retrieve an access token
+- we check that user2 can't
+
+
+

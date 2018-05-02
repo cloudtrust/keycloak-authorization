@@ -387,7 +387,6 @@ public class AuthorizationEndpoint extends AuthorizationEndpointBase {
         }
     }
 
-
     private Response buildAuthorizationCodeAuthorizationResponse() {
         this.event.event(EventType.LOGIN);
         authenticationSession.setAuthNote(Details.AUTH_TYPE, CODE_AUTH_TYPE);

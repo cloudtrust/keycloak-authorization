@@ -1,0 +1,8 @@
+Dependencies: org.keycloak.keycloak-core,
+ org.keycloak.keycloak-common,org.keycloak.keycloak-server-spi,
+ org.keycloak.keycloak-server-spi-private,org.keycloak.keycloak-saml-core,
+ org.keycloak.keycloak-saml-core-public,org.keycloak.keycloak-services,
+ org.picketlink.federation,org.picketlink.common,
+ org.jboss.resteasy.resteasy-jaxrs,org.jboss.logging,javax.ws.rs.api,
+ javax.api,org.apache.httpcomponents,org.apache.commons.lang,
+ com.quest.keycloak-wsfed

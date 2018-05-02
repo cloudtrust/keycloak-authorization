@@ -461,7 +461,7 @@ public class SamlProtocol implements LoginProtocol {
         }
 
         LocalAuthorizationService authorize = new LocalAuthorizationService(session, realm);
-        Response authResponse = authorize.isAuthorized(client, userSession, clientSession, accessCode);
+        Response authResponse = authorize.isAuthorizedResponse(client, userSession, clientSession, accessCode);
         if (authResponse != null) {
             return authResponse;
         }

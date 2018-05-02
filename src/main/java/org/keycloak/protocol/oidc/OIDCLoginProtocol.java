@@ -235,7 +235,7 @@ public class OIDCLoginProtocol implements LoginProtocol {
         }
 
         LocalAuthorizationService authorize = new LocalAuthorizationService(session, realm);
-        Response authResponse = authorize.isAuthorized(clientSession.getClient(), userSession, clientSession, accessCode);
+        Response authResponse = authorize.isAuthorizedResponse(clientSession.getClient(), userSession, clientSession, accessCode);
         if (authResponse != null) {
             return authResponse;
         }

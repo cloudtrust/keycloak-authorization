@@ -1,8 +1,8 @@
 package org.keycloak.protocol.docker;
 
 import io.cloudtrust.keycloak.test.MockHelper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.Before;
+import org.junit.Test;
 import org.keycloak.common.ClientConnection;
 import org.keycloak.events.EventBuilder;
 import org.keycloak.events.EventType;
@@ -11,8 +11,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
 public class DockerAuthV2ProtocolTest {
@@ -21,7 +20,7 @@ public class DockerAuthV2ProtocolTest {
 
     DockerAuthV2Protocol protocol;
 
-    @BeforeEach
+    @Before
     public void init() throws IOException {
         mh.initMocks();
         protocol = new DockerAuthV2Protocol();

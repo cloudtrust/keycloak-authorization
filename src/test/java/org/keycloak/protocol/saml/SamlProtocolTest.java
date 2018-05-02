@@ -1,22 +1,22 @@
 package org.keycloak.protocol.saml;
 
 import io.cloudtrust.keycloak.test.MockHelper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.Before;
+import org.junit.Test;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.UUID;
 
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 public class SamlProtocolTest {
 
     private SamlProtocol protocol;
     private MockHelper mh = new MockHelper();
 
-    @BeforeEach
+    @Before
     public void init() throws IOException {
         mh.initMocks();
         protocol = new SamlProtocol();

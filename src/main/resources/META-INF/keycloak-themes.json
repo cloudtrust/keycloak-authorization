@@ -1,8 +1,0 @@
-{
-    "themes": [
-        {
-            "name" : "authorization",
-            "types": [ "admin" ]
-        }
-    ]
-}
