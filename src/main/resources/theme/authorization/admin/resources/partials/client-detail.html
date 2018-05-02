@@ -305,7 +305,7 @@
                 </div>
                 <kc-tooltip>{{:: 'base-url.tooltip' | translate}}</kc-tooltip>
             </div>
-            <div class="form-group" data-ng-hide="protocol == 'saml' || protocol == 'docker-v2'">
+            <div class="form-group" data-ng-hide="protocol == 'saml' || protocol == 'docker-v2' || protocol == 'wsfed'">
                 <label class="col-md-2 control-label" for="adminUrl">{{:: 'admin-url' | translate}}</label>
                 <div class="col-sm-6">
                     <input class="form-control" type="text" name="adminUrl" id="adminUrl"
