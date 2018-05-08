@@ -53,55 +53,6 @@ __standalone.xml__
 
 Currently working on 3.4.3.Final (check tags for compatibility with previous keycloak versions)
 
-This is an example with keycloak avaible at /opt/keycloak
-
-### Copy files
-
-```Bash
-#Create layer in keycloak setup
-install -d -v -m755 /opt/keycloak/modules/system/layers/wsfed -o keycloak -g keycloak
-
-#Setup the module directory
-install -d -v -m755 /opt/keycloak/modules/system/layers/authorization/io/cloutrust/keycloak-authorization/main/ -o keycloak -g keycloak
-
-#Install jar
-install -v -m0755 -o keycloak -g keycloak -D target/keycloak-authorization-3.4.3.Final.jar /opt/keycloak/modules/system/layers/authorization/io/cloutrust/keycloak-authorization/main/
-
-#Install module file
-install -v -m0755 -o keycloak -g keycloak -D module.xml /opt/keycloak/modules/system/layers/authorization/io/cloutrust/keycloak-authorization/main/
-
-```
-
-### Enable module and load theme
-
-__layers.conf__
-
-```Bash
-layers=keycloak,wsfed,authorization
-```
-
-__standalone.xml__
-
-```xml
-<web-context>auth</web-context>
-<providers>
-    <provider>module:io.cloudtrust.keycloak-authorization</provider>
-    ...
-</providers>
-...
-<theme>
-    <modules>
-            <module>
-                    io.cloudtrust.keycloak-authorization
-            </module>
-    </modules>
-    ...
-</theme>
-...
-```
-
-In keycloak, the admin theme must then be set to `authorization` in the master realm and in the realm where the local 
-authorization is used, and keycloak must be restarted.  
 
 ## How to use
 1) Open keycloak's administration console
