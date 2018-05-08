@@ -14,6 +14,8 @@ It should be noted that the authorization step happens after authentication, so 
 not need re-input his login details to when switching between clients he has access to, and clients which he doesn't
 have access to.
 
+Currently working on 3.4.3.Final (check tags for compatibility with previous keycloak versions)
+
 ## How to install
 This is an example with keycloak available at /opt/keycloak
 
@@ -32,7 +34,7 @@ install -v -m0755 -o keycloak -g keycloak -D module.xml /opt/keycloak/modules/sy
 
 ```
 
-### Enable module
+### Enable module and load theme
 
 __layers.conf__
 
@@ -49,10 +51,19 @@ __standalone.xml__
     ...
 </providers>
 ...
+<theme>
+    <modules>
+            <module>
+                    io.cloudtrust.keycloak-authorization
+            </module>
+    </modules>
+    ...
+</theme>
+...
 ```
 
-Currently working on 3.4.3.Final (check tags for compatibility with previous keycloak versions)
-
+In keycloak, the admin theme must then be set to `authorization` in the master realm and in the realm where the local 
+authorization is used, and keycloak must be restarted (This step is optional if you are only going to use OIDC clients). 
 
 ## How to use
 1) Open keycloak's administration console
@@ -82,6 +93,7 @@ Keycloak uses a map to store this information, we overwrite the dependency
     is called. This will ensure that the local LoginProtocol is called.
     * **The login protocol** This is only class we actually modify. In the authenticated method we invoke the code to 
     verify that the client is authorised to access the client it wishes to connect to.
+1) We use a theme to add to the administrator pages the option to enable authorisation for all clients.
 
 We call keycloak's own existing authorisation methods and framework for a user's authorisation. This is done in the  
 methods of the class io.cloudtrust.keycloak.protocol.LocalAuthorizationService. 

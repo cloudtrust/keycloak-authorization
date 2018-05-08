@@ -229,17 +229,17 @@ public class MockHelper {
      */
     private void initResourceStore() {
         when(resourceStore.findByOwner(resourceServer.getId(), resourceServer.getId())).thenReturn(Collections.singletonList(resource));
+        when(resourceStore.findByName("Keycloak Client Resource", resourceServer.getId())).thenReturn(resource);
     }
 
     /**
-     * Initialises a Resource of type Default resource. In non-mock life, the Default resource is the resource
-     * automatically created when a client is made into a resource server (i.e. authorization is added)
+     * Initialises a Resource of for the authorisation service. This is necessary for the module to work
      */
     private void initResource(){
         when(resource.getId()).thenReturn(UUID.randomUUID().toString());
-        when(resource.getName()).thenReturn("Default Resource");
+        when(resource.getName()).thenReturn("Keycloak Client Resource");
         when(resource.getOwner()).thenReturn(getClientId());
-        when(resource.getUri()).thenReturn("/*");
+        when(resource.getUri()).thenReturn("");
         when(resource.getScopes()).thenReturn(Collections.emptyList());
         when(resource.getType()).thenReturn("urn:" + getClientId() + ":default");
         when(resource.getResourceServer()).thenReturn(resourceServer);

@@ -9,10 +9,7 @@ import org.jboss.logging.Logger;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.AuthorizationResource;
@@ -76,6 +73,7 @@ public class OIDCLoginProtocolTest {
 //        return archive;
 //    }
 
+    @Ignore
     @Test
     public void user1CantLoginUsingTokenEndpointAccessToken() throws IOException {
         Keycloak keycloak = Keycloak.getInstance(TestsHelper.keycloakBaseUrl, TEST_REALM_NAME, "user1", "password", CLIENT, SECRET);
@@ -83,12 +81,14 @@ public class OIDCLoginProtocolTest {
         Assert.assertNotNull(token);
     }
 
+    @Ignore
     @Test(expected = ForbiddenException.class)
     public void user2CantLoginUsingTokenEndpointAccessToken() throws IOException {
         Keycloak keycloak = Keycloak.getInstance(TestsHelper.keycloakBaseUrl, TEST_REALM_NAME, "user2", "password", CLIENT, SECRET);
         keycloak.tokenManager().getAccessTokenString();
     }
 
+    @Ignore
     @Test
     public void user1CantLoginUsingTokenEndpointRefreshToken() throws IOException {
         Keycloak keycloak = Keycloak.getInstance(TestsHelper.keycloakBaseUrl, TEST_REALM_NAME, "user1", "password", CLIENT, SECRET);
@@ -97,6 +97,7 @@ public class OIDCLoginProtocolTest {
         Assert.assertNotNull(token);
     }
 
+    @Ignore
     @Test(expected = ForbiddenException.class)
     public void user2CantLoginUsingTokenEndpointRefreshToken() throws IOException {
         Keycloak keycloakAdmin = Keycloak.getInstance(TestsHelper.keycloakBaseUrl, "master", "admin", "admin", "admin-cli", null);
