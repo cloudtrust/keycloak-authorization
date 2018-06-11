@@ -121,7 +121,7 @@ public class DockerAuthV2Protocol implements LoginProtocol {
         }
 
         LocalAuthorizationService authorize = new LocalAuthorizationService(session, realm);
-        Response authResponse = authorize.isAuthorizedResponse(client, userSession, clientSession, accessCode);
+        Response authResponse = authorize.isAuthorizedResponse(client, userSession, clientSession, accessCode, null);
         if (authResponse != null) {
             return authResponse;
         }

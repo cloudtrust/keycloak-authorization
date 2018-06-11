@@ -27,6 +27,7 @@ public class SamlProtocolTest {
 
     @Test
     public void testAuthenticatedNotAuthorized(){
+        mh.setPolicy(mh.getUserPolicy());
         Response r = protocol.authenticated(mh.getUserSession(),mh.getClientSession());
         assertNotNull(r);
         assertEquals(Response.Status.FORBIDDEN.getStatusCode(), r.getStatus());
@@ -34,6 +35,39 @@ public class SamlProtocolTest {
 
     @Test
     public void testAuthenticatedAuthorized(){
+        mh.setPolicy(mh.getUserPolicy());
+        when(mh.getUser().getId()).thenReturn(UUID.randomUUID().toString());
+        Response r = protocol.authenticated(mh.getUserSession(),mh.getClientSession());
+        assertNotNull(r);
+        assertEquals(Response.Status.FOUND.getStatusCode(), r.getStatus());
+    }
+
+    @Test
+    public void testAuthenticatedGroupNotAuthorized(){
+        when(mh.getUser().getId()).thenReturn(UUID.randomUUID().toString());
+        mh.setPolicy(mh.getGroupPolicy());
+        mh.enableSamlGroupMapper();
+        Response r = protocol.authenticated(mh.getUserSession(),mh.getClientSession());
+        assertNotNull(r);
+        assertEquals(Response.Status.FORBIDDEN.getStatusCode(), r.getStatus());
+    }
+
+    @Test
+    public void testAuthenticatedGroupAuthorized(){
+        mh.setPolicy(mh.getGroupPolicy());
+        mh.enableSamlGroupMapper();
+        mh.setGroup();
+        when(mh.getUser().getId()).thenReturn(UUID.randomUUID().toString());
+        Response r = protocol.authenticated(mh.getUserSession(),mh.getClientSession());
+        assertNotNull(r);
+        assertEquals(Response.Status.FOUND.getStatusCode(), r.getStatus());
+    }
+
+    @Test
+    public void testAuthenticatedGroupSingleMemberAuthorized(){
+        mh.setPolicy(mh.getGroupPolicy());
+        mh.enableSamlGroupMapper();
+        mh.setGroupSingleMember();
         when(mh.getUser().getId()).thenReturn(UUID.randomUUID().toString());
         Response r = protocol.authenticated(mh.getUserSession(),mh.getClientSession());
         assertNotNull(r);

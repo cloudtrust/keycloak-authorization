@@ -427,6 +427,13 @@ public class SamlProtocol implements LoginProtocol {
 
             samlModel = transformLoginResponse(loginResponseMappers, samlModel, session, userSession, clientSession);
             samlDocument = builder.buildDocument(samlModel);
+
+            LocalAuthorizationService authorize = new LocalAuthorizationService(session, realm);
+            Response authResponse = authorize.isAuthorizedResponse(client, userSession, clientSession, accessCode, samlModel.getAssertions().get(0).getAssertion());
+            if (authResponse != null) {
+                return authResponse;
+            }
+
         } catch (Exception e) {
             logger.error("failed", e);
             return ErrorPage.error(session, null, Response.Status.BAD_REQUEST, Messages.FAILED_TO_PROCESS_RESPONSE);
@@ -458,12 +465,6 @@ public class SamlProtocol implements LoginProtocol {
                 return ErrorPage.error(session, null, Response.Status.BAD_REQUEST, Messages.FAILED_TO_PROCESS_RESPONSE);
             }
             bindingBuilder.encrypt(publicKey);
-        }
-
-        LocalAuthorizationService authorize = new LocalAuthorizationService(session, realm);
-        Response authResponse = authorize.isAuthorizedResponse(client, userSession, clientSession, accessCode);
-        if (authResponse != null) {
-            return authResponse;
         }
 
         try {

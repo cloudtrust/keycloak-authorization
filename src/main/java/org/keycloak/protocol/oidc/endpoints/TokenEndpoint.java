@@ -397,7 +397,7 @@ public class TokenEndpoint {
         ClientSessionCode<AuthenticatedClientSessionModel> accessCode = new ClientSessionCode<>(session, realm, clientSession);
         boolean authorized;
         try{
-            authorized = authorize.isAuthorized(client, userSession, clientSession, accessCode);
+            authorized = authorize.isAuthorized(client, userSession, clientSession, accessCode, null);
         } catch (Exception e){
             return cors.builder(Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error while evaluating permissions.")).build();
         }
@@ -446,7 +446,7 @@ public class TokenEndpoint {
             ClientSessionCode<AuthenticatedClientSessionModel> accessCode = new ClientSessionCode<>(session, realm, clientSession);
             boolean authorized;
             try{
-                authorized = authorize.isAuthorized(client, userSession, clientSession, accessCode);
+                authorized = authorize.isAuthorized(client, userSession, clientSession, accessCode, null);
             } catch (Exception e){
                 return cors.builder(Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error while evaluating permissions.")).build();
             }
@@ -553,7 +553,7 @@ public class TokenEndpoint {
         ClientSessionCode<AuthenticatedClientSessionModel> accessCode = new ClientSessionCode<>(session, realm, clientSession);
         boolean authorized;
         try{
-            authorized = authorize.isAuthorized(client, userSession, clientSession, accessCode);
+            authorized = authorize.isAuthorized(client, userSession, clientSession, accessCode, null);
         } catch (Exception e){
             return cors.builder(Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error while evaluating permissions.")).build();
         }

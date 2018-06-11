@@ -1,10 +1,12 @@
 package io.cloudtrust.keycloak.test;
 
+import com.quest.keycloak.protocol.wsfed.mappers.SAMLGroupMembershipMapper;
 import org.keycloak.authorization.AuthorizationProvider;
 import org.keycloak.authorization.model.Policy;
 import org.keycloak.authorization.model.Resource;
 import org.keycloak.authorization.model.ResourceServer;
 import org.keycloak.authorization.policy.provider.PolicyProviderFactory;
+import org.keycloak.authorization.policy.provider.group.GroupPolicyProviderFactory;
 import org.keycloak.authorization.policy.provider.user.UserPolicyProviderFactory;
 import org.keycloak.authorization.store.PolicyStore;
 import org.keycloak.authorization.store.ResourceServerStore;
@@ -14,6 +16,7 @@ import org.keycloak.common.enums.SslRequired;
 import org.keycloak.common.util.CertificateUtils;
 import org.keycloak.forms.login.LoginFormsProvider;
 import org.keycloak.models.*;
+import org.keycloak.protocol.ProtocolMapper;
 import org.keycloak.representations.idm.authorization.DecisionStrategy;
 import org.keycloak.representations.idm.authorization.Logic;
 import org.keycloak.representations.idm.authorization.PolicyEnforcementMode;
@@ -77,6 +80,10 @@ public class MockHelper {
     private UserModel user;
     @Mock
     private RoleModel role;
+    @Mock
+    private GroupModel group1;
+    @Mock
+    private GroupModel group2;
 
     //Mocks for DB elements attached to authorization elements
     @Mock
@@ -95,10 +102,14 @@ public class MockHelper {
     private Policy parentPolicy;
     @Mock
     private Policy userPolicy;
+    @Mock
+    private Policy groupPolicy;
 
     //Mocks for sessions
     @Mock
     private KeycloakSession session;
+    @Mock
+    private KeycloakSessionFactory sessionFactory;
     @Mock
     private UserSessionModel userSession;
     @Mock
@@ -110,6 +121,10 @@ public class MockHelper {
     @Mock
     private KeyManager keyManager;
 
+    private ProtocolMapperModel oidcGroupMapper;
+    private ProtocolMapperModel samlGroupMapper;
+    private ProtocolMapperModel wsfedGroupMapper;
+
     /**
      * Initialises the mocks, must be called at least once in the test classes using this class. Can also be called
      * to reset the state of modified mocks.
@@ -117,6 +132,8 @@ public class MockHelper {
      */
     public void initMocks() throws IOException {
         MockitoAnnotations.initMocks(this);
+
+        initGroup();
         initRealm();
         initClient();
         initUser();
@@ -138,6 +155,13 @@ public class MockHelper {
         initKeyManager();
     }
 
+    private void initGroup() {
+        when(group1.getId()).thenReturn("32be1324-3529-4ea7-a97d-dab608a4111d");
+        when(group1.getName()).thenReturn("aGroup");
+        when(group2.getId()).thenReturn("42be1324-3529-4ea7-a97d-dab608a4111d");
+        when(group2.getName()).thenReturn("anotherGroup");
+    }
+
     /**
      * Initialises a keycloak realm called "testRealm"
      */
@@ -148,6 +172,7 @@ public class MockHelper {
         when(realm.getAccessCodeLifespan()).thenReturn(1000);
         when(realm.getAccessTokenLifespan()).thenReturn(2000);
         when(realm.getRoleById(role.getId())).thenReturn(role);
+        when(realm.getGroupById(group1.getId())).thenReturn(group1);
     }
 
     public RealmModel getRealm() {
@@ -182,6 +207,19 @@ public class MockHelper {
 
     public UserModel getUser() {
         return user;
+    }
+
+    public void setGroup() {
+        when(user.getGroups()).thenReturn(new HashSet<>(Arrays.asList(group1, group2)));
+        when(user.isMemberOf(any())).thenReturn(false);
+        when(user.isMemberOf(group1)).thenReturn(true);
+        when(user.isMemberOf(group2)).thenReturn(true);
+    }
+
+    public void setGroupSingleMember() {
+        when(user.getGroups()).thenReturn(new HashSet<>(Arrays.asList(group1)));
+        when(user.isMemberOf(any())).thenReturn(false);
+        when(user.isMemberOf(group1)).thenReturn(true);
     }
 
     /**
@@ -260,8 +298,14 @@ public class MockHelper {
      * @throws IOException raised if there's a problem with the JsonSerialisation of the userId
      */
     private void initPolicy() throws IOException {
-        when(parentPolicy.getAssociatedPolicies()).thenReturn(Collections.singleton(userPolicy));
-        when(parentPolicy.getDecisionStrategy()).thenReturn(DecisionStrategy.UNANIMOUS);
+        when(groupPolicy.getType()).thenReturn("group");
+        when(groupPolicy.getLogic()).thenReturn(Logic.POSITIVE);
+        Map<String, String> groupPolicyConfig = new HashMap<>();
+        groupPolicyConfig.put("groupsClaim","member");
+        String groups = "[{\"id\":\""+ group1.getId() +"\",\"extendChildren\":false}]";
+        groupPolicyConfig.put("groups", groups);
+        when(groupPolicy.getConfig()).thenReturn(groupPolicyConfig);
+
         when(userPolicy.getType()).thenReturn("user");
         when(userPolicy.getLogic()).thenReturn(Logic.NEGATIVE);
         when(userPolicy.getConfig()).thenReturn(Collections.singletonMap("users", JsonSerialization.writeValueAsString(Collections.singleton(getUserId()))));
@@ -269,6 +313,13 @@ public class MockHelper {
 
     public Policy getUserPolicy() {
         return userPolicy;
+    }
+    public Policy getGroupPolicy() {
+        return groupPolicy;
+    }
+    public void setPolicy(Policy policy) {
+        when(parentPolicy.getAssociatedPolicies()).thenReturn(Collections.singleton(policy));
+        when(parentPolicy.getDecisionStrategy()).thenReturn(DecisionStrategy.UNANIMOUS);
     }
 
     /**
@@ -288,8 +339,10 @@ public class MockHelper {
 
         Map<String, PolicyProviderFactory> polFactoMap = new HashMap<>();
         polFactoMap.put("user", new UserPolicyProviderFactory());
+        polFactoMap.put("group", new GroupPolicyProviderFactory());
         AuthorizationProvider authorizationProvider = new AuthorizationProvider(session, realm, polFactoMap);
         when(session.getProvider(AuthorizationProvider.class)).thenReturn(authorizationProvider);
+        when(session.getKeycloakSessionFactory()).thenReturn(sessionFactory);
     }
 
     public KeycloakSession getSession() {
@@ -307,6 +360,7 @@ public class MockHelper {
         when(userSession.getAuthenticatedClientSessions()).thenReturn(map);
         doReturn(user.getId()).when(userSession).getBrokerUserId();
         when(userSession.isOffline()).thenReturn(true);
+
     }
 
     public UserSessionModel getUserSession() {
@@ -332,6 +386,29 @@ public class MockHelper {
         return clientSession;
     }
 
+    public void enableOidcGroupMapper(){
+        oidcGroupMapper = org.keycloak.protocol.oidc.mappers.GroupMembershipMapper.create("oidcGroupMapper", "member", false, "", true,true);
+        oidcGroupMapper.setId(oidcGroupMapper.getName());
+        when(sessionFactory.getProviderFactory(ProtocolMapper.class, oidcGroupMapper.getProtocolMapper())).thenReturn(new org.keycloak.protocol.oidc.mappers.GroupMembershipMapper());
+        when(client.getProtocolMapperById(oidcGroupMapper.getId())).thenReturn(oidcGroupMapper);
+        when(clientSession.getProtocolMappers()).thenReturn(Collections.singleton(oidcGroupMapper.getName()));
+    }
+
+    public void enableWsfedGroupMapper(){
+        wsfedGroupMapper = SAMLGroupMembershipMapper.create("wsfedGroupMapper","member","basic",null, false);
+        wsfedGroupMapper.setId(wsfedGroupMapper.getName());
+        when(sessionFactory.getProviderFactory(ProtocolMapper.class, wsfedGroupMapper.getProtocolMapper())).thenReturn(new SAMLGroupMembershipMapper());
+        when(client.getProtocolMapperById(wsfedGroupMapper.getId())).thenReturn(wsfedGroupMapper);
+        when(clientSession.getProtocolMappers()).thenReturn(Collections.singleton(wsfedGroupMapper.getName()));
+    }
+
+    public void enableSamlGroupMapper(){
+        samlGroupMapper = org.keycloak.protocol.saml.mappers.GroupMembershipMapper.create("samlGroupMapper","member","basic", null, true);
+        samlGroupMapper.setId(samlGroupMapper.getName());
+        when(sessionFactory.getProviderFactory(ProtocolMapper.class, samlGroupMapper.getProtocolMapper())).thenReturn(new org.keycloak.protocol.saml.mappers.GroupMembershipMapper());
+        when(client.getProtocolMapperById(samlGroupMapper.getId())).thenReturn(samlGroupMapper);
+        when(clientSession.getProtocolMappers()).thenReturn(Collections.singleton(samlGroupMapper.getName()));
+    }
 
     /**
      * Initialises the UriInfo for the current action

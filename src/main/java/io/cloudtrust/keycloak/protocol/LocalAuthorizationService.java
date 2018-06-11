@@ -11,6 +11,13 @@ import org.keycloak.authorization.permission.ResourcePermission;
 import org.keycloak.authorization.policy.evaluation.Result;
 import org.keycloak.authorization.store.StoreFactory;
 import org.keycloak.authorization.util.Permissions;
+import org.keycloak.dom.saml.common.CommonAssertionType;
+import org.keycloak.dom.saml.v1.assertion.SAML11AssertionType;
+import org.keycloak.dom.saml.v1.assertion.SAML11AttributeStatementType;
+import org.keycloak.dom.saml.v1.assertion.SAML11AttributeType;
+import org.keycloak.dom.saml.v2.assertion.AssertionType;
+import org.keycloak.dom.saml.v2.assertion.AttributeStatementType;
+import org.keycloak.dom.saml.v2.assertion.AttributeType;
 import org.keycloak.models.*;
 import org.keycloak.protocol.oidc.TokenManager;
 import org.keycloak.representations.AccessToken;
@@ -19,9 +26,8 @@ import org.keycloak.services.ErrorPage;
 import org.keycloak.services.managers.ClientSessionCode;
 
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * The local authorisation service's purpose is to provide keycloak with a method to filter a user's access to a client
@@ -65,7 +71,8 @@ public final class LocalAuthorizationService {
      * @param accessCode The client session code TODO figure out what this actually is
      * @return {@code true} if the user is not authorised to access the client, false otherwise
      */
-    public boolean isAuthorized(ClientModel client, UserSessionModel userSession, AuthenticatedClientSessionModel clientSession, ClientSessionCode<AuthenticatedClientSessionModel> accessCode) {
+    public boolean isAuthorized(ClientModel client, UserSessionModel userSession, AuthenticatedClientSessionModel clientSession,
+                                ClientSessionCode<AuthenticatedClientSessionModel> accessCode, CommonAssertionType samlAssertion) {
         AuthorizationProvider authorization = session.getProvider(AuthorizationProvider.class);
         StoreFactory storeFactory = authorization.getStoreFactory();
         UserModel user = userSession.getUser();
@@ -75,19 +82,48 @@ public final class LocalAuthorizationService {
         }
         TokenManager tokenManager = new TokenManager();
         AccessToken accessToken = tokenManager.createClientAccessToken(session, accessCode.getRequestedRoles(), realm, client, user, userSession, clientSession);
-
+        accessToken.getOtherClaims().putAll(getClaims(samlAssertion));
         KeycloakIdentity identity = new KeycloakIdentity(accessToken, session, realm);
 
         Resource resource=storeFactory.getResourceStore().findByName("Keycloak Client Resource", resourceServer.getId());
-        List<ResourcePermission> permissions = Arrays.asList(new ResourcePermission(resource, new ArrayList<>(), resourceServer));
+        List<ResourcePermission> permissions = Collections.singletonList(new ResourcePermission(resource, new ArrayList<>(), resourceServer));
 
         List<Result> result = authorization.evaluators().from(permissions, new KeycloakEvaluationContext(identity, authorization.getKeycloakSession())).evaluate();
         List<Permission> entitlements = Permissions.permits(result, null, authorization, resourceServer);
 
-        if (!entitlements.isEmpty()) {
-            return true; //authorization ok
+        return !entitlements.isEmpty();
+    }
+
+    private Map<String, List<Object>> getClaims(CommonAssertionType samlAssertion){
+        Map<String,List<Object>> result = new HashMap<>();
+        if (samlAssertion instanceof SAML11AssertionType) {
+            SAML11AssertionType assertionType = (SAML11AssertionType) samlAssertion;
+            List<SAML11AttributeType> attributes = assertionType.getStatements().stream()
+                    .filter(x -> x instanceof SAML11AttributeStatementType)
+                    .map(SAML11AttributeStatementType.class::cast)
+                    .flatMap(x -> x.get().stream())
+                    .collect(Collectors.toList());
+            for (SAML11AttributeType attribute: attributes) {
+                if (!result.containsKey(attribute.getAttributeName())){
+                    result.put(attribute.getAttributeName(), new ArrayList<>());
+                }
+                result.get(attribute.getAttributeName()).addAll(attribute.get());
+            }
+        } else if (samlAssertion instanceof AssertionType) {
+            AssertionType assertionType = (AssertionType) samlAssertion;
+            List<AttributeType> attributes = assertionType.getAttributeStatements().stream()
+                    .flatMap(x -> x.getAttributes().stream())
+                    .map(AttributeStatementType.ASTChoiceType::getAttribute)
+                    .collect(Collectors.toList());
+            for (AttributeType attribute: attributes) {
+                if (!result.containsKey(attribute.getName())){
+                    result.put(attribute.getName(), new ArrayList<>());
+                }
+                result.get(attribute.getName()).addAll(attribute.getAttributeValue());
+            }
         }
-        return false;
+
+        return result;
     }
 
     /**
@@ -101,9 +137,12 @@ public final class LocalAuthorizationService {
      * @param accessCode The client session code TODO figure out what this actually is
      * @return A 403 FORBIDDEN error page if the user is not authorised to access the client, and null otherwise
      */
-    public Response isAuthorizedResponse(ClientModel client, UserSessionModel userSession, AuthenticatedClientSessionModel clientSession, ClientSessionCode<AuthenticatedClientSessionModel> accessCode) {
+    public Response isAuthorizedResponse(ClientModel client, UserSessionModel userSession,
+                                         AuthenticatedClientSessionModel clientSession,
+                                         ClientSessionCode<AuthenticatedClientSessionModel> accessCode,
+                                         CommonAssertionType samlAssertion) {
         try {
-            boolean authorized=isAuthorized(client, userSession, clientSession, accessCode);
+            boolean authorized=isAuthorized(client, userSession, clientSession, accessCode, samlAssertion);
             if(authorized){
                 return null;
             }else{

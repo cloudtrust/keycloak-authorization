@@ -57,6 +57,7 @@ public class DockerAuthV2ProtocolTest {
 
     @Test
     public void testAuthenticatedNotAuthorized(){
+        mh.setPolicy(mh.getUserPolicy());
         Response r = protocol.authenticated(mh.getUserSession(),mh.getClientSession());
         assertNotNull(r);
         assertEquals(Response.Status.FORBIDDEN.getStatusCode(), r.getStatus());
@@ -64,6 +65,7 @@ public class DockerAuthV2ProtocolTest {
 
     @Test
     public void testAuthenticatedAuthorized(){
+        mh.setPolicy(mh.getUserPolicy());
         when(mh.getUser().getId()).thenReturn(UUID.randomUUID().toString());
         Response r = protocol.authenticated(mh.getUserSession(),mh.getClientSession());
         assertNotNull(r);

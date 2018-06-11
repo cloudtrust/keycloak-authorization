@@ -30,6 +30,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
 import org.jboss.logging.Logger;
 import org.keycloak.connections.httpclient.HttpClientProvider;
+import org.keycloak.dom.saml.common.CommonAssertionType;
 import org.keycloak.dom.saml.v1.assertion.SAML11AssertionType;
 import org.keycloak.dom.saml.v2.assertion.AssertionType;
 import org.keycloak.events.EventBuilder;
@@ -185,6 +186,8 @@ public class WSFedLoginProtocol implements LoginProtocol {
                     .setSigningCertificate(activeKey.getCertificate())
                     .setSigningKeyPairId(activeKey.getKid());
 
+            CommonAssertionType samlAssertion =null;
+
             if (useJwt(client)) {
                 //JSON webtoken (OIDC) set in client config
                 WSFedOIDCAccessTokenBuilder oidcBuilder = new WSFedOIDCAccessTokenBuilder();
@@ -204,17 +207,19 @@ public class WSFedLoginProtocol implements LoginProtocol {
                 switch(tokenFormat) {
                     case SAML20_ASSERTION_TOKEN_FORMAT:
                         AssertionType saml20Token = buildSAML20AssertionToken(userSession, accessCode, clientSession);
+                        samlAssertion = saml20Token;
                         builder.setSamlToken(saml20Token);
                         break;
                     case SAML11_ASSERTION_TOKEN_FORMAT:
                         SAML11AssertionType saml11Token = buildSAML11AssertionToken(userSession, accessCode, clientSession);
+                        samlAssertion = saml11Token;
                         builder.setSaml11Token(saml11Token);
                         break;
                 }
             }
 
             LocalAuthorizationService authorize = new LocalAuthorizationService(session, realm);
-            Response authResponse = authorize.isAuthorizedResponse(client, userSession, clientSession, accessCode);
+            Response authResponse = authorize.isAuthorizedResponse(client, userSession, clientSession, accessCode, samlAssertion);
             if (authResponse != null) {
                 return authResponse;
             }

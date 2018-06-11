@@ -16,9 +16,24 @@
 
 package com.quest.keycloak.protocol.wsfed;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.stream.Collectors;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.HttpMethod;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+
 import com.quest.keycloak.common.wsfed.WSFedConstants;
 import com.quest.keycloak.common.wsfed.builders.WSFedResponseBuilder;
 import com.quest.keycloak.protocol.wsfed.builders.WSFedProtocolParameters;
+import com.quest.keycloak.protocol.wsfed.installation.WSFedIDPDescriptorClientInstallation;
 import org.jboss.logging.Logger;
 import org.keycloak.common.util.PemUtils;
 import org.keycloak.events.Errors;
@@ -35,15 +50,6 @@ import org.keycloak.services.managers.AuthenticationManager;
 import org.keycloak.services.messages.Messages;
 import org.keycloak.services.resources.RealmsResource;
 import org.keycloak.sessions.AuthenticationSessionModel;
-
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.stream.Collectors;
 
 /**
  * All protocols added to keycloak have to extend the AuthorizationEndpointBase.
@@ -109,18 +115,7 @@ public class WSFedService extends AuthorizationEndpointBase {
     @Path("descriptor")
     @Produces(MediaType.APPLICATION_XML)
     public String getDescriptor() throws Exception {
-        KeyManager keyManager = session.keys();
-        KeyManager.ActiveRsaKey activeKey = keyManager.getActiveRsaKey(realm);
-        InputStream is = getClass().getResourceAsStream("/wsfed-idp-metadata-template.xml");
-        String template = "Error getting descriptor";
-        try(BufferedReader br = new BufferedReader(new InputStreamReader(is))){
-            template = br.lines().collect(Collectors.joining("\n"));
-            template = template.replace("${idp.entityID}", RealmsResource.realmBaseUrl(uriInfo).build(realm.getName()).toString());
-            template = template.replace("${idp.sso.sts}", RealmsResource.protocolUrl(uriInfo).build(realm.getName(), WSFedLoginProtocol.LOGIN_PROTOCOL).toString());
-            template = template.replace("${idp.sso.passive}", RealmsResource.protocolUrl(uriInfo).build(realm.getName(), WSFedLoginProtocol.LOGIN_PROTOCOL).toString());
-            template = template.replace("${idp.signing.certificate}", PemUtils.encodeCertificate(activeKey.getCertificate()));
-        }
-        return template;
+        return WSFedIDPDescriptorClientInstallation.getIDPDescriptorForClient(session, realm, uriInfo.getBaseUri());
     }
 
     /**
@@ -136,8 +131,11 @@ public class WSFedService extends AuthorizationEndpointBase {
         AuthenticationManager.AuthResult authResult = authenticateIdentityCookie();
 
         try {
+            event.event(EventType.LOGIN);
             checkSsl();
+            event.event(EventType.LOGIN_ERROR);
             checkRealm();
+            event.event(null);
         } catch (ErrorPageException e) {
             return e.getResponse();
         }
@@ -254,7 +252,7 @@ public class WSFedService extends AuthorizationEndpointBase {
             return Response.status(501).build(); //Not Implemented
         }
         else if (params.getWsfed_action().compareTo(WSFedConstants.WSFED_SIGNOUT_ACTION) == 0 ||
-                 params.getWsfed_action().compareTo(WSFedConstants.WSFED_SIGNOUT_CLEANUP_ACTION) == 0) {
+                params.getWsfed_action().compareTo(WSFedConstants.WSFED_SIGNOUT_CLEANUP_ACTION) == 0) {
             logger.debug("** logout request");
             event.event(EventType.LOGOUT);
 
