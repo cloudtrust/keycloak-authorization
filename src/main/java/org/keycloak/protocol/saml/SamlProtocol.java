@@ -428,11 +428,14 @@ public class SamlProtocol implements LoginProtocol {
             samlModel = transformLoginResponse(loginResponseMappers, samlModel, session, userSession, clientSession);
             samlDocument = builder.buildDocument(samlModel);
 
+            /*Authorization block*/
             LocalAuthorizationService authorize = new LocalAuthorizationService(session, realm);
-            Response authResponse = authorize.isAuthorizedResponse(client, userSession, clientSession, accessCode, samlModel.getAssertions().get(0).getAssertion());
+            Response authResponse = authorize.isAuthorizedResponse(
+                    client, userSession, clientSession, accessCode, samlModel.getAssertions().get(0).getAssertion());
             if (authResponse != null) {
                 return authResponse;
             }
+            /*End Authorization block*/
 
         } catch (Exception e) {
             logger.error("failed", e);

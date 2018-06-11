@@ -69,6 +69,7 @@ public final class LocalAuthorizationService {
      * @param userSession The session of the user which is asking for access to the client's resources
      * @param clientSession The client session currently being used
      * @param accessCode The client session code TODO figure out what this actually is
+     * @param samlAssertion A SAML assertion. This should only be given for protocols that use SAML tokens. For the others, it should be set to null
      * @return {@code true} if the user is not authorised to access the client, false otherwise
      */
     public boolean isAuthorized(ClientModel client, UserSessionModel userSession, AuthenticatedClientSessionModel clientSession,
@@ -94,6 +95,12 @@ public final class LocalAuthorizationService {
         return !entitlements.isEmpty();
     }
 
+    /**
+     * This method takes a SAML 1.1 or SAML 2.0 assertion, and extracts the attributes (claims), returning the
+     * values in a
+     * @param samlAssertion
+     * @return
+     */
     private Map<String, List<Object>> getClaims(CommonAssertionType samlAssertion){
         Map<String,List<Object>> result = new HashMap<>();
         if (samlAssertion instanceof SAML11AssertionType) {
@@ -135,6 +142,7 @@ public final class LocalAuthorizationService {
      * @param userSession The session of the user which is asking for access to the client's resources
      * @param clientSession The client session currently being used
      * @param accessCode The client session code TODO figure out what this actually is
+     * @param samlAssertion A SAML assertion. This should only be given for protocols that use SAML tokens. For the others, it should be set to null
      * @return A 403 FORBIDDEN error page if the user is not authorised to access the client, and null otherwise
      */
     public Response isAuthorizedResponse(ClientModel client, UserSessionModel userSession,

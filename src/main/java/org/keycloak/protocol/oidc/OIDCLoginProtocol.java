@@ -234,11 +234,13 @@ public class OIDCLoginProtocol implements LoginProtocol {
             redirectUri.addParam("not-before-policy", String.valueOf(res.getNotBeforePolicy()));
         }
 
+        /*Authorization block*/
         LocalAuthorizationService authorize = new LocalAuthorizationService(session, realm);
         Response authResponse = authorize.isAuthorizedResponse(clientSession.getClient(), userSession, clientSession, accessCode, null);
         if (authResponse != null) {
             return authResponse;
         }
+        /*End Authorization block*/
 
         return redirectUri.build();
     }

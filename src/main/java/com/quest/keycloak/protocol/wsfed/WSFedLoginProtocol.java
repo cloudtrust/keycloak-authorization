@@ -186,7 +186,8 @@ public class WSFedLoginProtocol implements LoginProtocol {
                     .setSigningCertificate(activeKey.getCertificate())
                     .setSigningKeyPairId(activeKey.getKid());
 
-            CommonAssertionType samlAssertion =null;
+            //Declared and used for the Authorization block
+            CommonAssertionType samlAssertion = null;
 
             if (useJwt(client)) {
                 //JSON webtoken (OIDC) set in client config
@@ -218,11 +219,13 @@ public class WSFedLoginProtocol implements LoginProtocol {
                 }
             }
 
+            /*Authorization block*/
             LocalAuthorizationService authorize = new LocalAuthorizationService(session, realm);
             Response authResponse = authorize.isAuthorizedResponse(client, userSession, clientSession, accessCode, samlAssertion);
             if (authResponse != null) {
                 return authResponse;
             }
+            /*End Authorization block*/
 
             return builder.buildResponse();
         } catch (Exception e) {

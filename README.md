@@ -88,11 +88,11 @@ Keycloak uses a map to store this information, we overwrite the dependency
 1) We use a local copy the relevant keycloak classes that we need to work with for each protocol:
     * **The login protocol factory** This ensures that when the factory is created, it will call local code first, due to
     wildfly's classloader priority order (local classes are called before dependency classes). In this case, it includes
-    the creation of the endpoint.
-    * **The endpoint/service** We take this class to ensure that when the http request is called, it is our endpoint that 
-    is called. This will ensure that the local LoginProtocol is called.
+    the creation of the endpoints and of the login protocol.
     * **The login protocol** This is only class we actually modify. In the authenticated method we invoke the code to 
     verify that the client is authorised to access the client it wishes to connect to.
+    * For OIDC we need some extra classes to account for the different manners of obtaining a token (**TokenEndpoint** 
+    and **OIDCLoginProtocolService**)
 1) We use a theme to add to the administrator pages the option to enable authorisation for all clients.
 
 We call keycloak's own existing authorisation methods and framework for a user's authorisation. This is done in the  
@@ -100,12 +100,12 @@ methods of the class io.cloudtrust.keycloak.protocol.LocalAuthorizationService.
 
 ## How to update the code when keycloak changes version number
 
-When keycloak changes version number, we must replace all classes (login protocol factory, endpoint/service, login 
-protocol) of the module with their new version from keycloak and the corresponding keycloak WS-FED module. A call to
-the LocalAuthorisationService's methods must be then added in the login protocol's `authenticated` method
+When keycloak changes version number, we must replace all classes (login protocol factory, login 
+protocol, extra OIDC classes) of the module with their new version from keycloak and the corresponding keycloak WS-FED 
+module. A call to the LocalAuthorisationService's methods must be then added in the login protocol's `authenticated` method
 
 The LocalAuthorisationService must only be updated if the functions called change signature. The same is true for the
-tests. For these steps it necessary to understand how the keycloak classes and authorization functions work.
+tests. For these steps it is necessary to understand how the keycloak classes and authorization functions work.
 
 ## Removing the dependency on WS-FED
 
@@ -128,10 +128,11 @@ This part explains how we override existing classes in keycloak (to add the clie
 - These dependencies are instanciated when first defining the module in `ModuleLoader.defineModule` by calling `module.setDependencies` with the `moduleSpec.dependencies`
 - Finally, moduleSpec.dependencies is instanciated using the ModuleXmlParser which add a local dependency on the module before adding it's dependencies
 
-On the other hand when hot deploying modules (ex: arquillian) in the `ModuleSpecProcessor.createModuleService`, `this.createDependencies(specBuilder, dependencies, false);` is called before `specBuilder.addDependency(DependencySpec.createLocalDependencySpec());`
+On the other hand when hot deploying modules (ex: arquillian) in the `ModuleSpecProcessor.createModuleService`, 
+`this.createDependencies(specBuilder, dependencies, false);` is called before `specBuilder.addDependency(DependencySpec.createLocalDependencySpec());`
 
 ## Tests
-For now (Until teh class Loader is fixed), to test the module we need to deploy it manually on a local keycloak, and run the tests without using arquillian.
+For now (Until the class Loader is fixed), to test the module we need to deploy it manually on a local keycloak, and run the tests without using arquillian.
 The integration tests do the following:
 We import a realm with:
 - user1 having the role test-role and user2 without it.
